@@ -1,0 +1,82 @@
+#compdef drush
+#autoload
+
+# imported from the latest homedrush contributions
+
+_drush_all_formulae() {
+  formulae=(`drush search`)
+}
+
+_drush_installed_formulae() {
+  installed_formulae=(`drush list`)
+}
+
+local -a _1st_arguments
+local -a string
+string=`drush help --pipe --completion`
+_1st_arguments=(${(f)string})
+
+local expl
+local -a formula installed_formulae
+
+local curcontext="$curcontext" state line cmds ret=1
+
+_arguments -C \
+  '(- 1 *)'{-h,--help}'[display help information]' \
+  '(- 1 *)--version[display version information]' \
+  '(-s --simulate)'{-s,--simulate}'[print actions without performing them]' \
+  '(-d --download-only)'{-d,--download-only}"[just download packages - don\'t install]" \
+  '(-P --prompt)'{-P,--prompt}'[always display a prompt]' \
+  '(-y --assume-yes)'{-y,--assume-yes}'[assume yes answer to questions]' \
+  '(-F --display-format)'{-F,--display-format}'[specify output format for search command]:format' \
+  '(-O --sort)'{-O,--sort}'[specify sort order]:sort order:()' \
+  '(-w --width)'{-w,--width}'[specify output width]:width' \
+  '-f[aggressivley try to fix dependencies of broken packages]' \
+  '(-V --show-versions)'{-V,--show-versions}'[show which versions of packages will be installed]' \
+  '(-D --show-deps)'{-D,--show-deps}'[show brief explanations of automatic installations and removals]' \
+  '-Z[show disk space changes for each package]' \
+  '(-v --verbose)'{-v,--verbose}'[causes some commands to display extra information]' \
+  '(-R --without-recommends)'{-R,--with-recommends}'[install recommended packages when installing new packages]' \
+  '(--without-suggests)--with-suggests[install suggested packages when installing new packages]' \
+  '(-r --with-recommends)'{-r,--without-recommends}'[ignore recommended packages when installing new packages]' \
+  '(--with-suggests)--without-suggests[ignore suggested packages when installing new packages]' \
+  '(-t --target-release)'{-t,--target-release}'[set the release from which packages should be installed]:release:_aptitude_release' \
+  '(-q --quiet)'{-q=,--quiet=}'[less Output]:level' \
+  '--schedule-only[schedule operations to be performed in the future]' \
+  '--purge-unused[purge unused packages instead of removing]' \
+  '--visual-preview[start up the visual interface and display its preview screen]' \
+  '-S[load the extended state information from non-standard state file]:state file:_files' \
+  '-u[begin updating the package lists as soon as the program starts]' \
+  '-i[displays a download preview when the program starts]' \
+  '1: :->cmds' \
+  '*: :->args' && ret=0
+
+case $state in
+  cmds)
+    cmds=(${(f)string})
+    _describe -t commands 'drush command' cmds && ret=0
+  ;;
+  args)
+    case $line[1] in
+      vset)
+      _arguments -C \
+        '(- 1 *)'{-h,--help}'[display help information]' \
+        '(- 1 *)--version[display version information]'
+      ;;
+      (download|show|changelog|why|why-not|build-dep)
+        _deb_packages avail && ret=0
+      ;;
+      (remove|purge|hold|unhold|reinstall|forbid-version|markauto|unmarkauto)
+        _deb_packages installed && ret=0
+      ;;
+      install)
+        _deb_packages uninstalled && ret=0
+      ;;
+      *)
+        (( ret )) && _message 'no more arguments'
+      ;;
+    esac
+  ;;
+esac
+
+return ret
