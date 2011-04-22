@@ -80,6 +80,11 @@ function man-preview() {
   man -t "$@" | open -f -a Preview
 }
 
+# add man-preview completion function to path
+fpath=($ZSH/plugins/osx $fpath)
+autoload -U compinit
+compinit -i
+
 function trash() {
   local trash_dir="${HOME}/.Trash"
   local temp_ifs=$IFS
